@@ -18,6 +18,7 @@ const std::string TRAIN_LBL_PATH = RESOURCE_PATH "data/train-labels-idx1-ubyte/t
 const std::string TEST_IMG_PATH = RESOURCE_PATH "data/t10k-images-idx3-ubyte/t10k-images.idx3-ubyte";
 const std::string TEST_LBL_PATH = RESOURCE_PATH "data/t10k-labels-idx1-ubyte/t10k-labels.idx1-ubyte";
 const int EXAMPLES = 60000;
+const int EPOCH = 10;
 
 // Нейросетть
 NetWork NW;
@@ -29,9 +30,11 @@ const GLuint DOWNSCALED_WIDTH = 28, DOWNSCALED_HEIGHT = 28;
 struct Curve {
     std::vector<float> vertices;
 };
-
+// vector of curve lines
 std::vector<Curve> curves;
+// current drawing line
 Curve currentCurve;
+
 GLuint VBO, VAO, shaderProgram;
 bool isDrawing = false;
 
@@ -50,7 +53,7 @@ const char* fragmentShaderSource = R"(
     out vec4 FragColor;
 
     void main() {
-        FragColor = vec4(1.0, 1.0, 1.0, 1.0); // Белый цвет
+        FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     }
 )";
 
@@ -129,7 +132,7 @@ void show_predict(NetWork& NW, const char* path){
     for (int i = 0; i < result.size(); i++){
         std::cout << '\t' << i << " -> " << round((result[i] / sum) * 100) << '%' << std::endl;
     }
-    std::cout << "   Neuron network thinks this is a digit - " << max_index << std::endl;
+    std::cout << "   Neural network thinks that this is a digit -> " << max_index << std::endl;
     std::cout << "--------- Prediction ---------" << std::endl;
 }
 void save_rescaled_image() {
@@ -284,9 +287,9 @@ void display() {
 // Главная функция
 int main() {
 
-    std::cout << "\tHello and welcome to the MyDigitNet, a simple neuron network trained to guess hand-written digits.\n";
+    std::cout << "\tHello and welcome to the MyDigitNet, a simple Neural network trained to guess hand-written digits.\n";
     std::cout << "\t\tThis network needs to load config from: " << RESOURCE_PATH "Config.txt" << ".\n";
-    std::cout << "\t\t\tFirst of all you need to chose activation function.\n\n";
+    std::cout << "\t\t\tFirst of all you need to chose one of the activation functions.\n\n";
     // Цикл настройки нейросети
 
     data_NetWork NW_config = ReadDataNetWork( RESOURCE_PATH "Config.txt");
@@ -297,29 +300,35 @@ int main() {
    
     NW.Init(NW_config);
     NW.PrintConfig();
-    std::cout << "\t\tNow we are ready to use your neuron network.\n";
+    std::cout << "\t\tNow we are ready to use your Neural network.\n";
     while(repeat){
-        std::cout << "This neuron network has been already trained,\nAnd you can use it without study process. It will load data from Weights.txt or you can start study process.\n" << std::endl;
-        std::cout << "Write 1 if you want to train your neuron network.\nWrite 0 if you want to use trained neuron network.\n";
+        std::cout << "This Neural network has been already trained,\nAnd you can use it without train process. It will load data from Weights.txt or you can start training.\n" << std::endl;
+        std::cout << "Write 1 if you want to train your Neural network.\nWrite 0 if you want to use trained one.\n";
         std::cin >> study;
         std::cout << '\n';
         if (study) {
-            // mnist training data
+            // loading train data from MNIST dataset
             std::vector<std::vector<double>> images = readImages(TRAIN_IMG_PATH);
             std::vector<double> labels = readLabels(TRAIN_LBL_PATH);  
-
+            // number of examples
             int examples = EXAMPLES;
+            // convertion fo datatypes
             data_info* data = PrepareData(images, labels, NW_config, examples);
+            // time
             auto begin = std::chrono::steady_clock::now();
             while (right_ans / examples * 100 < 100){
                 right_ans = 0;
                 auto t1 = std::chrono::steady_clock::now();
                 for (int i = 0; i < examples; ++i){
+                    // set input data to NW
                     NW.SetInput(data[i].pixels);
                     right = data[i].digit;
+                    // feed forward to get predict
                     predict = NW.ForwardFeed();
                     if (predict != right){
+                        // back propagate if prediction is not right
                         NW.BackPropagation(right);
+                        // do not retrain your network
                         NW.WeightsUpdater(0.15 * exp(-epoch / 20.0));
                     }
                     else
@@ -329,22 +338,25 @@ int main() {
                 time = t2 - t1;
                 if (right_ans > maxra)
                     maxra = right_ans;
+                //get epoch result
                 std::cout << "right answers " << right_ans / examples * 100 << '\t' << "maxra: " << maxra / examples * 100 << " epoch: " << epoch << std::endl;
                 epoch++;
-                if (epoch == 10)
+                //number of epochs
+                if (epoch == EPOCH)
                     break;
                 auto end = std::chrono::steady_clock::now();
                 time = end - begin;
                 std::cout << "TIME: " << time.count() / 60.0 << " min" << std::endl;
-                
+                // Save your NW
                 NW.SaveWeights();
             }
         }
         else{
+            //read src/Weights.txt
             NW.ReadWeights();
             std::cout << '\n';
         }
-        std::cout << "Woud you like to see accuracy of your neuron network?\n\nWrite 1 if you want to see NN accuracy.\nWrite 0 if you want to skip this step.\n";
+        std::cout << "Woud you like to see accuracy of your Neural network?\n\nWrite 1 if you do.\nWrite 0 if you don't.\n";
         bool test_flag;
         std::cin >> test_flag;
         std::cout << '\n';
@@ -375,8 +387,8 @@ int main() {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
-    std::cout << "Now you can see a floating window, where you can draw your digits using left mouse button.\nIf you want to clean the scren, you can press 'c'.\n";
-    std::cout << "When your digit is ready to guess, you need to press right mouse button to send your picture to your neuron network.\nThen you can see its prediction.\n";
+    std::cout << "Now you can see a floating window, where you can draw your digits using left mouse button.\nIf you want to clean the screen, you can press 'c'.\n";
+    std::cout << "When your digit is ready to guess, you need to press right mouse button to send your picture to the Neural network.\nThen you can see its prediction.\n";
     // Настройки OpenGL
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
