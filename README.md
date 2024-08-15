@@ -2,7 +2,20 @@
 A simple neural network app made for guessing hand-written digits.
 ![screenshot2](/screenshots/example2.png)
 
-## Installation guide
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [License](#license)
+  
+## Features
+
+- **Digits Classification**: High accuracy digit recognition using a custom CNN architecture.
+- **Customizable Training**: Easily adjust model parameters such as learning rate, batch size, and number of epochs.
+- **Model Evaluation**: Visualize performance metrics and confusion matrices to assess model accuracy.
+- **Pre-trained Models**: Start with pre-trained models or train from scratch.
+
+## Installation
 
 1. Clone repository to your pc
    
@@ -36,8 +49,8 @@ A simple neural network app made for guessing hand-written digits.
    ```
    start build/MyDigitNet.exe
    ```
----
-## Usage guide
+
+## Usage
 ![screenshot1](/screenshots/example1.png)
 1. Check src/Config.txt file. First of all Neural network will read this file and set up its configuration.
    Deafult configuration is
@@ -54,3 +67,6 @@ A simple neural network app made for guessing hand-written digits.
 5. In the end, if you made any mistake, you can restart training/testing process.
 6. Now you have successfully set up your Neural network and it is ready to use. On the screen you can see a black sqare, where you can draw your digits. If you make any mistake, you can press "c" to clean the screen. When your picture is ready, you can click right mouse button to send your drawing to NeuralNetwork.
 7. Finally, you see network prediction in the console.
+
+ ## License
+This project is licensed under the MIT License - see the [LICENSE](/LICENSE) file for details.
